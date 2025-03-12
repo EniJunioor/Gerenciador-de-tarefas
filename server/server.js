@@ -20,11 +20,12 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log('MongoDB conectado'))
 .catch(err => console.error('Erro ao conectar ao MongoDB:', err));
 
+//integrando as rotas no servidor
+const boardRoutes = require("./src/routes/boardRoutes");
+const taskRoutes = require("./src/routes/taskRoutes");
 
-
-
-
-
+app.use("/boards", boardRoutes);
+app.use("/tasks", taskRoutes);
 
 
 const PORT = process.env.PORT || 3000;
