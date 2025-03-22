@@ -48,6 +48,9 @@ git clone https://github.com/EniJunioor/Gerenciador-de-tarefas.git
 2. Instalar dependências
 
 cd Gerenciador-de-tarefas
+cd app -> cd client
+        or
+cd app - cd server
 npm install
 
 3. Configurar variáveis de ambiente
