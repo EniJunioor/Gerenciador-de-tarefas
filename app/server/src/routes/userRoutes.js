@@ -22,7 +22,7 @@ require('dotenv').config();
  *   post:
  *     summary: Criar um novo usuário
  *     tags: [Users]
- *     description: Cria um novo usuário com nome, e-mail e senha.
+ *     description: Cria um novo usuário com nome, e-mail e senha. A senha deve ser confirmada para garantir a segurança.
  *     requestBody:
  *       required: true
  *       content:
@@ -33,6 +33,7 @@ require('dotenv').config();
  *               - name
  *               - email
  *               - password
+ *               - confirmPassword
  *             properties:
  *               name:
  *                 type: string
@@ -42,6 +43,10 @@ require('dotenv').config();
  *                 format: email
  *                 example: "joao@email.com"
  *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: "senha123"
+ *               confirmPassword:
  *                 type: string
  *                 format: password
  *                 example: "senha123"
@@ -63,33 +68,58 @@ require('dotenv').config();
  *                   type: string
  *                   example: "joao@email.com"
  *       400:
- *         description: Dados inválidos ou usuário já existente
+ *         description: "Erro na solicitação (exemplo: e-mail já cadastrado, senhas não coincidem, nome igual à senha)"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "As senhas não coincidem."
  *       500:
  *         description: Erro interno ao criar o usuário
  */
 
 //CRIAÇÂO DO USUARIO
 router.post('/register', async (req, res) => {
-    try {
-      const { name, email, password } = req.body;
-  
+  try {
+      const { name, email, password, confirmPassword } = req.body;
+
+      // Verifica se as senhas coincidem
+      if (password !== confirmPassword) {
+          return res.status(400).json({ message: "As senhas não coincidem." });
+      }
+
+      // Validação: Nome e senha não podem ser iguais
+      if (name === password) {
+          return res.status(400).json({ message: "O nome e a senha não podem ser iguais." });
+      }
+
       // Verifica se o e-mail já está em uso
       const userExists = await User.findOne({ email });
       if (userExists) return res.status(400).json({ message: 'E-mail já cadastrado' });
-  
+
       // Criptografa a senha
       const hashedPassword = await bcrypt.hash(password, 10);
-  
+
       // Cria usuário
       const newUser = new User({ name, email, password: hashedPassword });
       await newUser.save();
-  
-      res.status(201).json({ message: 'Usuário criado com sucesso' });
-    } catch (error) {
-      console.error('Erro no registro:', error);  // Adicionando log do erro
+
+      res.status(201).json({ 
+          message: 'Usuário criado com sucesso', 
+          id: newUser._id, 
+          name: newUser.name, 
+          email: newUser.email 
+      });
+  } catch (error) {
+      console.error('Erro no registro:', error);
       res.status(500).json({ message: 'Erro ao registrar usuário', error: error.message });
-    }
-  });
+  }
+});
+
+
   
 /**
  * @swagger

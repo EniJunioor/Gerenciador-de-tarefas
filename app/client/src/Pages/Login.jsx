@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Imagegit from "../assets/github.svg";
 import Imagegoogle from "../assets/google.svg";
+import api from "../services/api";
 
 const FloatingInput = ({ type, placeholder }) => {
     const [focus, setFocus] = useState(false);
@@ -11,15 +12,15 @@ const FloatingInput = ({ type, placeholder }) => {
     return (
         <div className="relative w-full mb-4">
             <motion.label
-                initial={{ y: "50%", scale: 1.2, opacity: 0.7 }}
+                initial={{ y: "50%", scale: 1.1, opacity: 0.9 }}
                 animate={{ 
                     y: value || focus ? "-10px" : "50%", 
                     scale: value || focus ? 0.85 : 1.2, 
                     opacity: 1
                 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.1 }}
                 className={`absolute left-3 transition-all ${
-                    value || focus ? "text-blue-500 align-text-top top-2" : "text-gray-400 text-base top-1/2 -translate-y-6"
+                    value || focus ? "text-blue-500 align-text-top top-2" : "text-gray-400 text-sm top-1/2 -translate-y-6"
                 }`}
             >
                 {placeholder}
@@ -30,7 +31,7 @@ const FloatingInput = ({ type, placeholder }) => {
                 onChange={(e) => setValue(e.target.value)}
                 onFocus={() => setFocus(true)}
                 onBlur={() => setFocus(false)}
-                className="w-full pt-5 pb-2 px-3 bg-gray-200 rounded-lg  focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                className="w-full pt-5 pb-2 px-2 bg-gray-200 rounded-lg  focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
             />
         </div>
     );
@@ -39,6 +40,30 @@ const FloatingInput = ({ type, placeholder }) => {
 
 const Login = () => {
     const navigate = useNavigate();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await api.post("http://localhost:3000/api/users/login", {
+                email,
+                password,
+            });
+
+            const { token } = response.data;
+            
+            localStorage.setItem("token", token); // Salva o token no localStorage
+            navigate("/dashboard"); // Redireciona para o painel
+
+        } catch (err) {
+            console.error("Erro no login:", err);
+            setError("Invalid email or password");
+        }
+    };
+
 
     return (
         <motion.div
@@ -82,8 +107,8 @@ const Login = () => {
                     </div>
 
                     <form className="mt-4">
-                        <FloatingInput type="email" placeholder="Email" />
-                        <FloatingInput type="password" placeholder="Password" />
+                    <FloatingInput type="email" placeholder="Email" value={email} setValue={setEmail} />
+                    <FloatingInput type="password" placeholder="Password" value={password} setValue={setPassword} />
                         
                         <label className="flex items-center space-x-2">
                             <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
@@ -92,7 +117,7 @@ const Login = () => {
 
                         <a href="#" className="text-blue-500 text-sm block mt-2 hover:underline">Forgot Password?</a>
 
-                        <button className="w-full bg-blue-500 text-white p-3 mt-4 rounded-lg hover:bg-blue-700 transform transition hover:scale-105">
+                        <button type="submit" className="w-full bg-blue-500 text-white p-3 mt-4 rounded-lg hover:bg-blue-700 transform transition hover:scale-105">
                             Login
                         </button>
                     </form>
